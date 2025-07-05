@@ -8,23 +8,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
 import java.util.List;
 
 @Service
 public class AuthorizationSoapClientService {
     
     private static final Logger logger = LoggerFactory.getLogger(AuthorizationSoapClientService.class);
-    private static final String NAMESPACE = "http://web.service.eas.citso.fsa.usda.gov";
     
     private final WebServiceTemplate webServiceTemplate;
-    private final ObjectFactory objectFactory;
     
     @Autowired
     public AuthorizationSoapClientService(WebServiceTemplate webServiceTemplate) {
         this.webServiceTemplate = webServiceTemplate;
-        this.objectFactory = new ObjectFactory();
     }
     
     /**
@@ -34,23 +29,15 @@ public class AuthorizationSoapClientService {
         try {
             logger.debug("Finding matching user identity with {} map entries", mapEntries.size());
             
-            // Create the request object using generated classes
+            // Create the request object using generated classes - send the element directly
             FindMatchingUserIdentityRequest request = new FindMatchingUserIdentityRequest();
             request.getMapEntry().addAll(mapEntries);
             
-            // Create JAXBElement for the request - use the element factory method
-            JAXBElement<FindMatchingUserIdentityRequest> requestElement = 
-                new JAXBElement<>(new QName(NAMESPACE, "FindMatchingUserIdentityRequest"), 
-                                FindMatchingUserIdentityRequest.class, request);
+            // Send the request element directly (not wrapped in JAXBElement)
+            FindMatchingUserIdentityResponse response = 
+                (FindMatchingUserIdentityResponse) webServiceTemplate.marshalSendAndReceive(request);
             
-            // Send request and get response
-            @SuppressWarnings("unchecked")
-            JAXBElement<FindMatchingUserIdentityResponse> responseElement = 
-                (JAXBElement<FindMatchingUserIdentityResponse>) webServiceTemplate.marshalSendAndReceive(requestElement);
-            
-            FindMatchingUserIdentityResponse response = responseElement.getValue();
             UserIdentity userIdentity = response.getUserIdentity();
-            
             logger.debug("Found user identity: {}", userIdentity != null ? userIdentity.getUserLoginName() : "null");
             return userIdentity;
             
@@ -70,25 +57,17 @@ public class AuthorizationSoapClientService {
         try {
             logger.debug("Finding offices for EAuth ID: {} with {} office types", usdaEauthId, officeTypes.size());
             
-            // Create the request object
+            // Create the request object - send directly
             FindOfficesByEauthIdRequest request = new FindOfficesByEauthIdRequest();
             request.setUsdaEauthId(usdaEauthId);
             request.getOfficeType().addAll(officeTypes);
             request.setRequestToken(requestToken);
             
-            // Create JAXBElement for the request
-            JAXBElement<FindOfficesByEauthIdRequest> requestElement = 
-                new JAXBElement<>(new QName(NAMESPACE, "FindOfficesByEauthIdRequest"), 
-                                FindOfficesByEauthIdRequest.class, request);
+            // Send request directly
+            FindOfficesByEauthIdResponse response = 
+                (FindOfficesByEauthIdResponse) webServiceTemplate.marshalSendAndReceive(request);
             
-            // Send request and get response
-            @SuppressWarnings("unchecked")
-            JAXBElement<FindOfficesByEauthIdResponse> responseElement = 
-                (JAXBElement<FindOfficesByEauthIdResponse>) webServiceTemplate.marshalSendAndReceive(requestElement);
-            
-            FindOfficesByEauthIdResponse response = responseElement.getValue();
             ListType offices = response.getOffices();
-            
             logger.debug("Found {} offices", offices != null && offices.getListValue() != null ? offices.getListValue().size() : 0);
             return offices;
             
@@ -108,25 +87,17 @@ public class AuthorizationSoapClientService {
         try {
             logger.debug("Finding users for office: {} with role: {}", officeId, roleName);
             
-            // Create the request object
+            // Create the request object - send directly
             FindUsersByCriteriaRequest request = new FindUsersByCriteriaRequest();
             request.setOfficeId(officeId);
             request.setRoleName(roleName);
             request.setRequestToken(requestToken);
             
-            // Create JAXBElement for the request
-            JAXBElement<FindUsersByCriteriaRequest> requestElement = 
-                new JAXBElement<>(new QName(NAMESPACE, "FindUsersByCriteriaRequest"), 
-                                FindUsersByCriteriaRequest.class, request);
+            // Send request directly
+            FindUserCriteriaResponse response = 
+                (FindUserCriteriaResponse) webServiceTemplate.marshalSendAndReceive(request);
             
-            // Send request and get response
-            @SuppressWarnings("unchecked")
-            JAXBElement<FindUserCriteriaResponse> responseElement = 
-                (JAXBElement<FindUserCriteriaResponse>) webServiceTemplate.marshalSendAndReceive(requestElement);
-            
-            FindUserCriteriaResponse response = responseElement.getValue();
             ListType users = response.getUsers();
-            
             logger.debug("Found {} users", users != null && users.getListValue() != null ? users.getListValue().size() : 0);
             return users;
             
@@ -146,21 +117,13 @@ public class AuthorizationSoapClientService {
         try {
             logger.debug("Getting roles for user: {}", userIdentity.getUserLoginName());
             
-            // Create the request object
+            // Create the request object - send directly
             GetUserRolesRequest request = new GetUserRolesRequest();
             request.setUserIdentity(userIdentity);
             
-            // Create JAXBElement for the request
-            JAXBElement<GetUserRolesRequest> requestElement = 
-                new JAXBElement<>(new QName(NAMESPACE, "GetUserRolesRequest"), 
-                                GetUserRolesRequest.class, request);
-            
-            // Send request and get response
-            @SuppressWarnings("unchecked")
-            JAXBElement<GetUserRolesResponse> responseElement = 
-                (JAXBElement<GetUserRolesResponse>) webServiceTemplate.marshalSendAndReceive(requestElement);
-            
-            GetUserRolesResponse response = responseElement.getValue();
+            // Send request directly
+            GetUserRolesResponse response = 
+                (GetUserRolesResponse) webServiceTemplate.marshalSendAndReceive(request);
             
             logger.debug("Found {} roles for user", 
                 response.getUserRoles() != null && response.getUserRoles().getListValue() != null ? 
@@ -184,19 +147,14 @@ public class AuthorizationSoapClientService {
         try {
             logger.debug("Checking service health");
             
-            // Create the request object (empty for health check)
+            // Create the request object - send directly
             IsHealthy request = new IsHealthy();
             
-            // Create JAXBElement for the request
-            JAXBElement<IsHealthy> requestElement = 
-                new JAXBElement<>(new QName(NAMESPACE, "isHealthy"), IsHealthy.class, request);
+            // Send request directly
+            IsHealthyResponse response = 
+                (IsHealthyResponse) webServiceTemplate.marshalSendAndReceive(request);
             
-            // Send request and get response
-            @SuppressWarnings("unchecked")
-            JAXBElement<IsHealthyResponse> responseElement = 
-                (JAXBElement<IsHealthyResponse>) webServiceTemplate.marshalSendAndReceive(requestElement);
-            
-            boolean result = responseElement.getValue().isReturn();
+            boolean result = response.isReturn();
             logger.debug("Service health check result: {}", result);
             return result;
             
