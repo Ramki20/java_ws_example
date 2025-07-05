@@ -1,0 +1,39 @@
+# Application Properties (application.yml)
+spring:
+  application:
+    name: authorization-soap-client
+  
+# SOAP Service Configuration
+soap:
+  service:
+    url: http://10.29.60.95:8080/easws/sharedservice/AuthorizationSharedService
+    timeout: 30000
+
+# Logging Configuration
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework.ws: DEBUG
+    org.springframework.ws.client.MessageTracing.sent: TRACE
+    org.springframework.ws.client.MessageTracing.received: TRACE
+    org.springframework.ws.server.MessageTracing.sent: TRACE
+    org.springframework.ws.server.MessageTracing.received: TRACE
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
